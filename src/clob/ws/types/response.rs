@@ -1024,7 +1024,7 @@ mod tests {
             slug: Some("s".to_owned()),
             description: Some("d".to_owned()),
             asset_ids: vec![],
-            outcomes: vec![],
+            outcomes: Some(vec![]),
             winning_asset_id: U256::from_str(
                 "106585164761922456203746651621390029417453862034640469075081961934906147433548",
             )
