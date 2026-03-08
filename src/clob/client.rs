@@ -2107,6 +2107,8 @@ impl<K: Kind> Client<Authenticated<K>> {
             token_id: None,
             price: None,
             size: None,
+            fee_rate: None,
+            tick_size: None,
             amount: None,
             side: None,
             nonce: None,

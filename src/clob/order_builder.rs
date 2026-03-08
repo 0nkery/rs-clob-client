@@ -161,7 +161,7 @@ impl<K: AuthKind> OrderBuilder<Limit, K> {
         }
 
         let fee_rate = match self.fee_rate {
-            None => self.client.fee_rate_bps(token_id).await?.fee_rate,
+            None => self.client.fee_rate_bps(token_id).await?.base_fee,
             Some(fee_rate) => fee_rate,
         };
         let minimum_tick_size = match self.tick_size {
