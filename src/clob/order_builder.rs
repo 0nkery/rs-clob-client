@@ -42,6 +42,8 @@ pub struct OrderBuilder<OrderKind, K: AuthKind> {
     pub(crate) token_id: Option<U256>,
     pub(crate) price: Option<Decimal>,
     pub(crate) size: Option<Decimal>,
+    pub(crate) fee_rate: Option<u32>,
+    pub(crate) tick_size: Option<Decimal>,
     pub(crate) amount: Option<Amount>,
     pub(crate) side: Option<Side>,
     pub(crate) nonce: Option<u64>,
@@ -99,6 +101,18 @@ impl<OrderKind, K: AuthKind> OrderBuilder<OrderKind, K> {
         self.post_only = Some(post_only);
         self
     }
+
+    #[must_use]
+    pub fn tick_size(mut self, tick_size: Decimal) -> Self {
+        self.tick_size = Some(tick_size);
+        self
+    }
+
+    #[must_use]
+    pub fn fee_rate(mut self, fee_rate: u32) -> Self {
+        self.fee_rate = Some(fee_rate);
+        self
+    }
 }
 
 impl<K: AuthKind> OrderBuilder<Limit, K> {
@@ -146,13 +160,19 @@ impl<K: AuthKind> OrderBuilder<Limit, K> {
             )));
         }
 
-        let fee_rate = self.client.fee_rate_bps(token_id).await?;
-        let minimum_tick_size = self
-            .client
-            .tick_size(token_id)
-            .await?
-            .minimum_tick_size
-            .as_decimal();
+        let fee_rate = match self.fee_rate {
+            None => self.client.fee_rate_bps(token_id).await?.fee_rate,
+            Some(fee_rate) => fee_rate,
+        };
+        let minimum_tick_size = match self.tick_size {
+            None => self
+                .client
+                .tick_size(token_id)
+                .await?
+                .minimum_tick_size
+                .as_decimal(),
+            Some(tick_size) => tick_size,
+        };
 
         let decimals = minimum_tick_size.scale();
 
@@ -239,7 +259,7 @@ impl<K: AuthKind> OrderBuilder<Limit, K> {
             makerAmount: U256::from(to_fixed_u128(maker_amount)),
             takerAmount: U256::from(to_fixed_u128(taker_amount)),
             side: side as u8,
-            feeRateBps: U256::from(fee_rate.base_fee),
+            feeRateBps: U256::from(fee_rate),
             nonce: U256::from(nonce),
             signer: self.signer,
             expiration: U256::from(expiration.timestamp().to_u64().ok_or(Error::validation(
