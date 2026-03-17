@@ -1176,6 +1176,10 @@ impl Client<Unauthenticated> {
     /// # }
     /// ```
     pub fn new(host: &str, config: Config) -> Result<Client<Unauthenticated>> {
+        Self::new_with_timeout(host, config, Duration::from_secs(30))
+    }
+
+    pub fn new_with_timeout(host: &str, config: Config, timeout: Duration) -> Result<Client<Unauthenticated>> {
         let mut headers = HeaderMap::new();
 
         headers.insert("User-Agent", HeaderValue::from_static("rs_clob_client"));
@@ -1183,7 +1187,7 @@ impl Client<Unauthenticated> {
         headers.insert("Connection", HeaderValue::from_static("keep-alive"));
         headers.insert("Content-Type", HeaderValue::from_static("application/json"));
 
-        let client = ReqwestClient::builder().default_headers(headers).build()?;
+        let client = ReqwestClient::builder().default_headers(headers).timeout(timeout).build()?;
 
         let geoblock_host = Url::parse(
             config
